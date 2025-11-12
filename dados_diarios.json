@@ -1,0 +1,16 @@
+[
+    {
+        "data": "2025-11-12 18:55:40",
+        "temperatura": 18.69,
+        "sensacao_termica": 18.65,
+        "umidade": 78,
+        "descricao": "algumas nuvens"
+    },
+    {
+        "data": "2025-11-12 19:20:44",
+        "temperatura": 18.87,
+        "sensacao_termica": 18.9,
+        "umidade": 80,
+        "descricao": "algumas nuvens"
+    }
+]

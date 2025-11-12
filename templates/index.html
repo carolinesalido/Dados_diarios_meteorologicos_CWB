@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dados Meteorológicos - Curitiba</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background-color: #f3f4f6;
+      color: #333;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Painel lateral esquerdo */
+    .sidebar {
+      width: 320px;
+      background-color: #ffffffcc;
+      backdrop-filter: blur(6px);
+      padding: 20px;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 8px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #e9ecef;
+      font-weight: bold;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #555;
+      margin-top: 20px;
+    }
+
+    #map {
+      flex-grow: 1;
+      height: 100%;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div>
+      <h1>☀️ Curitiba - Dados Meteorológicos</h1>
+      <table>
+        <tbody id="dados">
+          <tr><th>Cidade</th><td>—</td></tr>
+          <tr><th>Temperatura (°C)</th><td>—</td></tr>
+          <tr><th>Condição</th><td>—</td></tr>
+          <tr><th>Última Atualização</th><td>—</td></tr>
+          <tr><th>Consultas Totais</th><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="footer">
+      Dados fornecidos por <strong>OpenWeatherMap API</strong>.<br>
+      © Esri World Imagery
+    </div>
+  </div>
+
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    async function carregarDados() {
+      const resposta = await fetch("/dados");
+      const resultado = await resposta.json();
+      const { dados, consultas } = resultado;
+
+      const temp = dados.temperatura;
+      let corFundo;
+      if (temp > 26) corFundo = "#ffadad"; // quente
+      else if (temp >= 16) corFundo = "#fff3b0"; // moderado
+      else corFundo = "#a0c4ff"; // frio
+
+      // Atualiza tabela lateral
+      const tabela = `
+        <tr><th>Cidade</th><td>${dados.cidade}</td></tr>
+        <tr><th>Temperatura (°C)</th><td>${temp.toFixed(1)}</td></tr>
+        <tr><th>Condição</th><td>${dados.condicao}</td></tr>
+        <tr><th>Última Atualização</th><td>${dados.data}</td></tr>
+        <tr><th>Consultas Totais</th><td>${consultas}</td></tr>
+      `;
+      document.getElementById("dados").innerHTML = tabela;
+
+      // Cria o mapa
+      const map = L.map("map").setView([-25.4284, -49.2733], 12);
+
+      // Fundo de mapa da Esri (imagem de satélite)
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+        attribution: "Tiles © Esri — Source: Esri, Maxar, Earthstar Geographics, USDA, USGS, AeroGRID",
+        maxZoom: 19
+      }).addTo(map);
+
+      // Ícone de clima
+      const iconeUrl = `https://openweathermap.org/img/wn/${dados.icone}@2x.png`;
+      const icone = L.icon({
+        iconUrl: iconeUrl,
+        iconSize: [70, 70],
+        iconAnchor: [35, 70]
+      });
+
+      // Adiciona marcador
+      L.marker([-25.4284, -49.2733], { icon: icone })
+        .addTo(map)
+        .bindPopup(`<b>${dados.cidade}</b><br>${dados.condicao}<br>${temp.toFixed(1)} °C`)
+        .openPopup();
+
+      // Fundo colorido por temperatura
+      document.body.style.backgroundColor = corFundo;
+    }
+
+    carregarDados();
+  </script>
+</body>
+</html>
